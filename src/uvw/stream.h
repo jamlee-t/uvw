@@ -62,21 +62,26 @@ struct DataEvent {
 
 namespace details {
 
+// JAMLEE: 请求类型 uv_connect_t
 struct ConnectReq final: public Request<ConnectReq, uv_connect_t> {
     using Request::Request;
 
+    // JAMLEE: 调用函数 f 和 参数
     template<typename F, typename... Args>
     void connect(F &&f, Args &&...args) {
         invoke(std::forward<F>(f), get(), std::forward<Args>(args)..., &defaultCallback<ConnectEvent>);
     }
 };
 
+// JAMLEE: 请求类型 uv_shutdown_t
 struct ShutdownReq final: public Request<ShutdownReq, uv_shutdown_t> {
     using Request::Request;
 
+    // JAMLEE: 关闭 stream
     void shutdown(uv_stream_t *handle);
 };
 
+// JAMLEE: 请求类型 uv_write_t
 template<typename Deleter>
 class WriteReq final: public Request<WriteReq<Deleter>, uv_write_t> {
     using ConstructorAccess = typename Request<WriteReq<Deleter>, uv_write_t>::ConstructorAccess;
@@ -87,6 +92,8 @@ public:
           data{std::move(dt)},
           buf{uv_buf_init(data.get(), len)} {}
 
+    // JAMLEE: 调用 uv_write 方法。写完的回调是 defaultCallback, 写入完毕后发布事件 WriteEvent
+    // this->get() 获取底层的资源例如 uv_write_t
     void write(uv_stream_t *handle) {
         this->invoke(&uv_write, this->get(), handle, &buf, 1, &this->template defaultCallback<WriteEvent>);
     }
@@ -113,6 +120,7 @@ template<typename T, typename U>
 class StreamHandle: public Handle<T, U> {
     static constexpr unsigned int DEFAULT_BACKLOG = 128;
 
+    // JAMLEE: uv_read 函数完成后的回调函数
     static void readCallback(uv_stream_t *handle, ssize_t nread, const uv_buf_t *buf) {
         T &ref = *(static_cast<T *>(handle->data));
         // data will be destroyed no matter of what the value of nread is
@@ -134,6 +142,7 @@ class StreamHandle: public Handle<T, U> {
         }
     }
 
+    // JAMLEE: uv_listen 函数完成后的回调函数
     static void listenCallback(uv_stream_t *handle, int status) {
         if(T &ref = *(static_cast<T *>(handle->data)); status) {
             ref.publish(ErrorEvent{status});
@@ -150,6 +159,7 @@ public:
     using Handle<T, U>::Handle;
 #endif
 
+    // JAMLEE: 发 shutdown 请求
     /**
      * @brief Shutdowns the outgoing (write) side of a duplex stream.
      *
@@ -162,12 +172,14 @@ public:
             ptr->publish(event);
         };
 
+        // JAMLEE: 获取一个 ShutdownReq 请求。请求发送给 loop
         auto shutdown = this->loop().template resource<details::ShutdownReq>();
         shutdown->template once<ErrorEvent>(listener);
         shutdown->template once<ShutdownEvent>(listener);
         shutdown->shutdown(this->template get<uv_stream_t>());
     }
 
+    // JAMLEE: 调用 uv_listen
     /**
      * @brief Starts listening for incoming connections.
      *
@@ -182,6 +194,7 @@ public:
         this->invoke(&uv_listen, this->template get<uv_stream_t>(), backlog, &listenCallback);
     }
 
+    // JAMLEE: 调用 uv_accept
     /**
      * @brief Accepts incoming connections.
      *
