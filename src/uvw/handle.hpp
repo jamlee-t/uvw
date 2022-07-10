@@ -17,6 +17,9 @@ namespace uvw {
  */
 struct CloseEvent {};
 
+// JAMLEE: 
+// 继承链: Handle > Resource > Emitter, UnderlayingType, std::enable_shared_from_this
+// T 和 U 例如 IdleHandle, uv_idle_t
 /**
  * @brief Handle base class.
  *
@@ -25,6 +28,7 @@ struct CloseEvent {};
 template<typename T, typename U>
 class Handle: public Resource<T, U> {
 protected:
+    // JAMLEE: 关闭时执行的回调
     static void closeCallback(uv_handle_t *handle) {
         Handle<T, U> &ref = *(static_cast<T *>(handle->data));
         [[maybe_unused]] auto ptr = ref.shared_from_this();
@@ -32,6 +36,7 @@ protected:
         ref.publish(CloseEvent{});
     }
 
+    // JAMLEE: 分配内存时执行回调
     static void allocCallback(uv_handle_t *, std::size_t suggested, uv_buf_t *buf) {
         auto size = static_cast<unsigned int>(suggested);
         *buf = uv_buf_init(new char[size], size);
@@ -39,6 +44,7 @@ protected:
 
     template<typename F, typename... Args>
     bool initialize(F &&f, Args &&...args) {
+        // JAMLEE: 当前的sPrt指针。是空则调用函数 f 执行初始化资源
         if(!this->self()) {
             if(auto err = std::forward<F>(f)(this->parent(), this->get(), std::forward<Args>(args)...); err) {
                 this->publish(ErrorEvent{err});
@@ -50,6 +56,7 @@ protected:
         return this->self();
     }
 
+    // JAMLEE: 调用函数 f
     template<typename F, typename... Args>
     void invoke(F &&f, Args &&...args) {
         auto err = std::forward<F>(f)(std::forward<Args>(args)...);
@@ -57,8 +64,11 @@ protected:
     }
 
 public:
+    // JAMLEE: 既然继承了 Resource，为什么还 using ? 这里术语叫做拷贝构造函数
     using Resource<T, U>::Resource;
 
+    // JAMLEE: 获取 handle 的 类型。也就是 details::UVTypeWrapper<uv_handle_type> 的模板参数 uv_handle_type。
+    // HandleCategory 是 details::UVTypeWrapper<uv_handle_type>; HandleCategory 是一个类。
     /**
      * @brief Gets the category of the handle.
      *
@@ -72,6 +82,7 @@ public:
         return HandleCategory{this->template get<uv_handle_t>()->type};
     }
 
+    // JAMLEE: 获取这个 uv_handle_type 类型。
     /**
      * @brief Gets the type of the handle.
      *
@@ -85,6 +96,7 @@ public:
         return Utilities::guessHandle(category());
     }
 
+    // JAMLEE: 获取 handle 的 active 状态。
     /**
      * @brief Checks if the handle is active.
      *
@@ -108,6 +120,7 @@ public:
         return !(uv_is_active(this->template get<uv_handle_t>()) == 0);
     }
 
+    // JAMLEE: 获取 handle 的 closing 状态。
     /**
      * @brief Checks if a handle is closing or closed.
      *
@@ -120,6 +133,7 @@ public:
         return !(uv_is_closing(this->template get<uv_handle_t>()) == 0);
     }
 
+    // JAMLEE: 关闭 handle。
     /**
      * @brief Request handle to be closed.
      *
@@ -135,6 +149,7 @@ public:
         }
     }
 
+    // JAMLEE: handle 的 ref 和 unref 操作。
     /**
      * @brief Reference the given handle.
      *
@@ -145,6 +160,7 @@ public:
         uv_ref(this->template get<uv_handle_t>());
     }
 
+    // JAMLEE: handle 的 ref 和 unref 操作。
     /**
      * @brief Unreference the given handle.
      *

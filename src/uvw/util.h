@@ -15,6 +15,8 @@ namespace uvw {
 
 namespace details {
 
+// JAMLEE: 枚举类，其值得类型为 std::underlying_type_t<uv_handle_type>。是 uv_handle_type 枚举的底层值
+// uv_handle_type 是 C 语言里的 enum
 enum class UVHandleType : std::underlying_type_t<uv_handle_type> {
     UNKNOWN = UV_UNKNOWN_HANDLE,
     ASYNC = UV_ASYNC,
@@ -36,6 +38,7 @@ enum class UVHandleType : std::underlying_type_t<uv_handle_type> {
     FILE = UV_FILE
 };
 
+// JAMLEE: UVTypeWrapper 表示一种类型，例如 uv_tcp_hanlde
 template<typename T>
 struct UVTypeWrapper {
     using Type = T;
@@ -198,6 +201,7 @@ struct WinSize {
     int height; /*!< The _height_ of the given window. */
 };
 
+// JAMLEE: 枚举类，代表所有 uv_handle type
 using HandleType = details::UVHandleType; /*!< The type of a handle. */
 
 using HandleCategory = details::UVTypeWrapper<uv_handle_type>; /*!< Utility class that wraps an internal handle type. */

@@ -8,6 +8,9 @@
 
 namespace uvw {
 
+// JAMLEE:
+// T: 代表 UnderlyingType 的子类
+// U: 代表 resource 类型，也就是 resource 字段的类型
 /**
  * @brief Wrapper class for underlying types.
  *
@@ -15,30 +18,36 @@ namespace uvw {
  */
 template<typename T, typename U>
 class UnderlyingType {
+    // JAMLEE: 本身模板类友元类
     template<typename, typename>
     friend class UnderlyingType;
 
 protected:
+    // JAMLEE: 这个保护型的结构体，也就是说只有子类能够初始化父类了
     struct ConstructorAccess {
         explicit ConstructorAccess(int) {}
     };
 
+    // JAMLEE: resource 指针，转换为 R 类型的指针 
     template<typename R = U>
     auto get() noexcept {
         return reinterpret_cast<R *>(&resource);
     }
 
+    // JAMLEE: resource 指针，转换为 R 类型的常量指针 resource
     template<typename R = U>
     auto get() const noexcept {
         return reinterpret_cast<const R *>(&resource);
     }
 
+    // JAMLEE: 获取其他底层资源的指针
     template<typename R, typename... P>
     auto get(UnderlyingType<P...> &other) noexcept {
         return reinterpret_cast<R *>(&other.resource);
     }
 
 public:
+    // JAMLEE: 构造函数
     explicit UnderlyingType(ConstructorAccess, std::shared_ptr<Loop> ref) noexcept
         : pLoop{std::move(ref)}, resource{} {}
 
@@ -49,9 +58,11 @@ public:
         static_assert(std::is_base_of_v<UnderlyingType<T, U>, T>);
     }
 
+    // JAMLEE: 删除默认的赋值符
     UnderlyingType &operator=(const UnderlyingType &) = delete;
     UnderlyingType &operator=(UnderlyingType &&) = delete;
 
+    // JAMLEE: 创建 resource。
     /**
      * @brief Creates a new resource of the given type.
      * @param args Arguments to be forwarded to the actual constructor (if any).
@@ -62,6 +73,7 @@ public:
         return std::make_shared<T>(ConstructorAccess{0}, std::forward<Args>(args)...);
     }
 
+    // JAMLEE: 获取 resource 被发起的 loop。返回值为引用，避免调用拷贝构造函数
     /**
      * @brief Gets the loop from which the resource was originated.
      * @return A reference to a loop instance.
@@ -110,7 +122,7 @@ public:
 
 private:
     std::shared_ptr<Loop> pLoop;
-    U resource;
+    U resource; // T 代表 UnderlyingType, U 代表类似 uv_idle_type 类型
 };
 
 } // namespace uvw

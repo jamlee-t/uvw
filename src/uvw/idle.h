@@ -14,6 +14,9 @@ namespace uvw {
  */
 struct IdleEvent {};
 
+// JAMLEE: 定义 IdleHandle
+// 继承链：IdleHandle > Handle > Resource > Emitter, UnderlayingType, std::enable_shared_from_this
+
 /**
  * @brief The IdleHandle handle.
  *
@@ -31,6 +34,8 @@ struct IdleEvent {};
  * To create an `IdleHandle` through a `Loop`, no arguments are required.
  */
 class IdleHandle final: public Handle<IdleHandle, uv_idle_t> {
+    
+    // JAMLEE: 启动回调
     static void startCallback(uv_idle_t *handle);
 
 public:
