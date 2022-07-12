@@ -9,6 +9,10 @@
 
 namespace uvw {
 
+// JAMLEE:
+// 1. T 是 req 对应的 C++ 类
+// 2. U 是 req, 例如 uv_write_t。将这个请求提交给 loop
+
 /**
  * @brief Request base class.
  *
