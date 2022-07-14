@@ -145,6 +145,7 @@ public:
         if(err) { publish(ErrorEvent{err}); }
     }
 
+    // JAMLEE: 模板参数 R 是创建的类型
     /**
      * @brief Creates resources of any type.
      *
