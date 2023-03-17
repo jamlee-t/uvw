@@ -1,8 +1,8 @@
 #ifndef UVW_TYPE_INFO_INCLUDE_HPP
 #define UVW_TYPE_INFO_INCLUDE_HPP
 
-#include <cstddef>
-#include <string_view>
+#include <cstdint>
+#include "config.h"
 
 namespace uvw {
 

@@ -15,9 +15,9 @@ endif()
 #
 # Project configuration
 #
-set(UVW_VERSION_MAJOR 2)
-set(UVW_VERSION_MINOR 12)
-set(UVW_VERSION_PATCH 1)
+set(UVW_VERSION_MAJOR 3)
+set(UVW_VERSION_MINOR 0)
+set(UVW_VERSION_PATCH 0)
 
 project(
     uvw
@@ -186,9 +186,25 @@ install(
 #
 # Install targets
 #
-
-install(EXPORT uvwConfig NAMESPACE uvw:: DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/uvw)
-install(TARGETS uvw EXPORT uvwConfig ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+if (BUILD_UVW_LIBS)
+    set_target_properties(
+        uvw PROPERTIES
+        VERSION ${UVW_VERSION_MAJOR}.${UVW_VERSION_MINOR}.${UVW_VERSION_PATCH}
+        SOVERSION ${UVW_VERSION_MAJOR}
+    )
+endif()
+install(
+    EXPORT uvwConfig 
+    NAMESPACE uvw:: 
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/uvw
+)
+install(
+    TARGETS uvw 
+    EXPORT uvwConfig
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
 if(FETCH_LIBUV AND BUILD_UVW_LIBS)
     # libuv is only fetched when both above conditions are true
     install(DIRECTORY ${libuv_SOURCE_DIR}/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/uvw/uv/include)
@@ -237,11 +253,15 @@ endif()
 add_custom_target(
     uvw_aob
     SOURCES
-        .github/workflows/build.yml
+        .github/workflows/build-macos.yml
+        .github/workflows/build-ubuntu-20.04.yml
+        .github/workflows/build-ubuntu-latest.yml
+        .github/workflows/build-win.yml
         .github/workflows/coverage.yml
         .github/workflows/deploy.yml
         .github/FUNDING.yml
         AUTHORS
         LICENSE
         README.md
+        TODO
 )
